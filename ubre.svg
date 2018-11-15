@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="500px" viewBox="0 0 800 500" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.4 (67378) - http://www.bohemiancoding.com/sketch -->
+    <title>Artboard</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Artboard" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group" transform="translate(272.000000, 189.000000)">
+            <text id="ub" font-family="Exo2-Regular, Exo 2" font-size="88" font-weight="normal" fill="#423030">
+                <tspan x="19.34" y="88">ub</tspan>
+            </text>
+            <text id="re" font-family="Exo2-Regular, Exo 2" font-size="88" font-weight="normal" fill="#423030">
+                <tspan x="144.228" y="88">re</tspan>
+            </text>
+            <text id="p-s" font-family="Exo2-Regular, Exo 2" font-size="30" font-weight="normal" line-spacing="29" fill="#907B7B">
+                <tspan x="0" y="65">p</tspan>
+                <tspan x="1.08" y="94">s</tspan>
+            </text>
+            <text id="q-s" font-family="Exo2-Regular, Exo 2" font-size="30" font-weight="normal" line-spacing="29" fill="#907B7B">
+                <tspan x="229" y="65">q</tspan>
+                <tspan x="229.93" y="94">s</tspan>
+            </text>
+            <path d="M131.5,6.5 L131.5,122.5" id="Line" stroke="#979797" stroke-width="3" stroke-linecap="square" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,17 @@
+{
+  "name": "ubre",
+  "version": "0.1.0",
+  "description": "A Javascript library implementing the lightweight ubre text protocol",
+  "main": "lib/index.js",
+  "dependencies": {
+    "uuid": "3.3.2"
+  },
+  "devDependencies": {
+    "esm": "3.0.84",
+    "mithril-stream": "1.1.0",
+    "pws": "1.0.2",
+    "ws": "6.0.0"
+  },
+  "author": "Rasmus Porsager",
+  "license": "WTFPL"
+}
