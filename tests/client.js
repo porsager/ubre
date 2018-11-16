@@ -1,4 +1,4 @@
-const Ubre = require('./lib')
+const Ubre = require('../lib')
 const WS = require('ws')
 const Pws = require('pws')
 

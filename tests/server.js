@@ -1,4 +1,4 @@
-const Ubre = require('./lib/index.js')
+const Ubre = require('../lib/index.js')
     , WebSocket = require('ws')
 
 const wss = new WebSocket.Server({
