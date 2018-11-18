@@ -20,42 +20,48 @@ The following line / lines contain an optional payload for the message.
 
 Used to subscribe / publish to various topics. The topic format and handling is entirely up to the client.
 
-#### `SUBSCRIBE`
+#### `subscribe`
 
 ```
-SUBSCRIBE topic
+subscribe topic
 ```
 
-#### `PUBLISH`
+#### `publish`
 
 ```
-PUBLISH topic
+publish topic
 ```
 
-#### `UNSUBSCRIBE`
+#### `unsubscribe`
 
 ```
-UNSUBSCRIBE topic
+unsubscribe topic
 ```
 
 ### req / res
 
 > rpc, rest, graphql
 
-#### `REQUEST`
+#### `request`
 
 ```
-REQUEST id path
+request id path
 ```
 
-#### `RESPONSE`
+#### `cancel`
 
 ```
-RESPONSE id
+cancel id
 ```
 
-#### `CANCEL`
+#### `success`
 
 ```
-CANCEL id
+success id
+```
+
+#### `success`
+
+```
+fail id
 ```

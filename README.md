@@ -71,7 +71,7 @@ wss.on('connection', ws => {
   ws.on('close', () => ubre.close(ws))
 
   // Publish some news
-  ubre.publish('/news', {
+  ubre.publish('news', {
     title: 'Short News',
     content: 'News these days are very short'
   })

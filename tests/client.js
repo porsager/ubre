@@ -3,11 +3,11 @@ const WS = require('ws')
 const Pws = require('pws')
 
 // Establish a reconnecting websocket.
-const  ws = new Pws('ws://localhost:3000', WS)
+const ws = new Pws('ws://localhost:3000', WS)
 
 const ubre = Ubre({
   // Ubre will call send to have you forward it over your connection
-  send: message => console.log(message) || ws.send(message)
+  send: message => ws.send(message)
 })
 
 // When a message is received pass it on to ubre for handling
@@ -26,7 +26,7 @@ ubre.handle('authenticate', () => ({
 }))
 
 // Subscribe to the news topic
-ubre.subscribe('news', news => { console.log(news)
+ubre.subscribe('news', news => {
   // Do things with the news
 })
 
