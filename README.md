@@ -19,6 +19,10 @@ const server = ws.Server({ port: 5000 })
 const ubre = Ubre(server)
 
 ubre.handle('echo', x => x)
+
+setInterval(() =>
+  ubre.publish('ping', new Date())
+)
 ```
 
 ## WebSocket client
@@ -32,11 +36,10 @@ const ubre = Ubre(socket)
 ubre.request('echo', 'hello').then(x =>
   x // hello
 )
-```
 
-## WebSocket client
-```js
-
+ubre.subscribe('ping', date => 
+  date // eg. '2018-11-19T21:50:05.679Z'
+)
 ```
 
 ## Manual hookup - WebSocket Client example 
