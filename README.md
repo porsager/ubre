@@ -6,10 +6,40 @@
 
 **A Javascript library implementing the lightweight [UBRE](UBRE.md) text protocol for p2p, client and server use.**
 
+Ubre is by itself transport agnostic, and the base of this library simply gives you some hooks to tie ubre messages with the transport of your choosing.
 
-This client works by being transport agnostic. Various hooks are available to tie ubre messages with the transport of your choosing.
+There are pre hooked versions to set up Ubre easily over WebSockets on the client and server.
 
-## Client example over WebSockets
+## WebSocket server
+```js
+const ws = require('ws')
+    , Ubre = require('ubre')
+
+const server = ws.Server({ port: 5000 })
+const ubre = Ubre(server)
+
+ubre.handle('echo', x => x)
+```
+
+## WebSocket client
+```js
+import Pws from 'pws'
+import Ubre from 'ubre'
+
+const socket = new Pws('ws://localhost:5000')
+const ubre = Ubre(socket)
+
+ubre.request('echo', 'hello').then(x =>
+  x // hello
+)
+```
+
+## WebSocket client
+```js
+
+```
+
+## Manual hookup - WebSocket Client example 
 
 ```js
 import Ubre from 'ubre'
@@ -43,7 +73,7 @@ ubre.request('/users').then(users =>
 )
 ```
 
-## Server example
+## Manual hookup - WebSocket Server example
 
 ```js
 const Ubre = require('ubre')
