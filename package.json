@@ -14,7 +14,8 @@
     "rollup-plugin-node-resolve": "3.4.0"
   },
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
   },
   "author": "Rasmus Porsager",
   "license": "WTFPL"
