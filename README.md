@@ -10,13 +10,18 @@ Ubre is by itself transport agnostic, and the base of this library simply gives 
 
 There are pre hooked versions to set up Ubre easily over WebSockets on the client and server.
 
-## WebSocket server
+## Getting started
+You can initialize `Ubre` in various ways. The simplest form is using one of the pre defined wrappers.
+
+Here's a simple example using the WebSocket wrapper setting up both a server and client.
+
+#### WebSocket server
 ```js
 const ws = require('ws')
     , Ubre = require('ubre')
 
 const server = ws.Server({ port: 5000 })
-const ubre = Ubre(server)
+const ubre = Ubre.ws(server)
 
 ubre.handle('echo', x => x)
 
@@ -25,24 +30,80 @@ setInterval(() =>
 )
 ```
 
-## WebSocket client
+#### WebSocket client
 ```js
 import Pws from 'pws'
 import Ubre from 'ubre'
 
 const socket = new Pws('ws://localhost:5000')
-const ubre = Ubre(socket)
+const ubre = Ubre.ws(socket)
 
 ubre.request('echo', 'hello').then(x =>
   x // hello
 )
 
-ubre.subscribe('ping', date => 
+ubre.subscribe('ping', date =>
   date // eg. '2018-11-19T21:50:05.679Z'
 )
 ```
 
-## Manual hookup - WebSocket Client example 
+## Request / Response (RPC)
+
+The request / response method is fairly straight forward. You can send a request to a specific namespace with an arbitrary payload, and a promise is returned which respolves once the recipient returns either success or failure.
+
+#### Make a request
+```js
+ubre.request('launch', {
+  code: 42
+})
+.then(result => 'Launched with result')
+.catch(error => 'Oh noes - wrong code')
+```
+
+To handle a request you register a function for a namespace which returns your response directly or as a promise
+#### Handle requests
+```js
+ubre.handle('launch', ({ code }) =>
+  launchCodes.get(code)
+)
+```
+
+## Pub / Sub
+
+The publish / subscribe setup is equally simple. No wildcard matching just direct namespaces / topics as with RPC. To subscribe, simply specify the topic and a callback function to be called whenever something is published.
+
+```js
+ubre.subscribe('news', news => {
+  // Something new
+})
+```
+
+Publishing is equally simple, just do.
+```js
+ubre.publish('news', { title: 'Short news', content: 'News are new' })
+```
+
+## Options
+
+#### `send: Function (data, target) -> `
+Ubre will call the `send` function to have you handle pushing the message over your chosen transport.
+
+#### `open: Boolean`
+Open is used for clients or servers that you know will always have an open connection.
+
+#### `serialize: Function a -> b`
+
+
+#### `deserialize: Function a -> b`
+
+## Methods
+
+#### `.message(data, target)`
+This function is used to push messages following the ubre protocol from senders for ubre to handle. 
+
+## More examples
+
+#### Manual hookup - WebSocket Client example 
 
 ```js
 import Ubre from 'ubre'
@@ -76,7 +137,7 @@ ubre.request('/users').then(users =>
 )
 ```
 
-## Manual hookup - WebSocket Server example
+#### Manual hookup - WebSocket Server example
 
 ```js
 const Ubre = require('ubre')
