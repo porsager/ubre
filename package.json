@@ -4,6 +4,7 @@
   "description": "A Javascript library implementing the lightweight ubre text protocol",
   "main": "dist/index.js",
   "browser": "dist/index.browser.js",
+  "unpkg": "dist/index.browser.js",
   "dependencies": {
     "uuid": "3.3.2"
   },
@@ -18,5 +19,6 @@
     "prepublishOnly": "npm run build"
   },
   "author": "Rasmus Porsager",
+  "repository": "porsager/ubre",
   "license": "WTFPL"
 }
