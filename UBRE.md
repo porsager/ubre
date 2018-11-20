@@ -12,6 +12,17 @@ You can find an implementation of UBRE in javascript which can be used on the se
 
 All message formats start the first line with the type of message and metadata to complete that message.
 
+```
+type meta data
+payload
+```
+
+eg.
+```
+publish news
+{"title":"Some News","content":"Short news"}
+```
+
 The following line / lines contain an optional payload for the message.
 
 ### pub / sub 
@@ -30,6 +41,7 @@ subscribe topic
 
 ```
 publish topic
+payload
 ```
 
 #### `unsubscribe`
@@ -46,6 +58,7 @@ unsubscribe topic
 
 ```
 request id path
+payload
 ```
 
 #### `cancel`
@@ -58,10 +71,12 @@ cancel id
 
 ```
 success id
+payload
 ```
 
 #### `success`
 
 ```
 fail id
+payload
 ```
