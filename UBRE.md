@@ -1,5 +1,7 @@
 ![ubre](logo.svg)
 
+***WARNING** *This is still alpha stage - expect breaking changes*
+
 **UBRE is a small text protocol for message passing supporting pub/sub & request/response (rpc).**
 
 It can be used on any kind of connection that supports sending / receiving messages, but was created with websockets in mind. It should be easy to use for communicating through iframes, service workers and similar avenues.
