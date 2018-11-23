@@ -30,7 +30,9 @@ function Ubre({
     },
 
     publish: (from, [topic], body) =>
-      subscriptions.has(topic) && subscriptions.get(topic).forEach(s => s.fn(body)),
+      subscriptions.has(topic) && subscriptions.get(topic).forEach(s => (
+        (!s.target || s.target === from) && s.fn(body)
+      )),
 
     request: (from, [id, url], data) => {
       if (!handlers.has(url))
