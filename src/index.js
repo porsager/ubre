@@ -1,2 +1,6 @@
-export { default } from './ubre'
-export { default as ws } from './websocket'
+import Ubre from './ubre'
+import ws from './websocket'
+
+Ubre.ws = ws
+
+export default Ubre

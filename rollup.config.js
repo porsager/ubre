@@ -28,7 +28,6 @@ export default [{
   ],
   output: {
     file: 'dist/index.js',
-    exports: 'named',
     format: 'cjs'
   }
 }]

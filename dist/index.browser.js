@@ -125,7 +125,9 @@ function Ubre(ref) {
     publish: function (from, ref, body) {
         var topic = ref[0];
 
-        return subscriptions.has(topic) && subscriptions.get(topic).forEach(function (s) { return s.fn(body); });
+        return subscriptions.has(topic) && subscriptions.get(topic).forEach(function (s) { return (
+        (!s.target || s.target === from) && s.fn(body)
+      ); });
   },
 
     request: function (from, ref, data) {
@@ -204,8 +206,9 @@ function Ubre(ref) {
   };
 
   ubre.publish = function (topic, body) {
-    subscribers.has(topic) && subscribers.get(topic).forEach(function (s) { return forward(['publish', topic], body, s); }
-    );
+    subscribers.has(topic) && subscribers.get(topic).forEach(function (s) {
+      forward(['publish', topic], body, s);
+    });
   };
 
   ubre.subscribe = function(topic, body, fn) {
@@ -216,13 +219,13 @@ function Ubre(ref) {
       body = undefined;
     }
 
-    open && forward(['subscribe', 'topic'], body, this.target);
+    open && forward(['subscribe', topic], body, this.target);
     var subscription = { body: body, fn: fn, sent: open, target: this.target };
     subscriptions.add(topic, subscription);
 
     return {
       unsubscribe: function () {
-        open && forward(['unsubscribe', 'topic'], null, this$1.target);
+        open && forward(['unsubscribe', topic], null, this$1.target);
         subscriptions.remove(topic, subscription);
       }
     }
@@ -324,21 +327,22 @@ function MapSet() {
   }
 }
 
-function websocket (ws, options) { return typeof ws.address === 'function'
+function ws (ws, options) { return typeof ws.address === 'function'
     ? server(ws, options)
     : client(ws, options); }
 
 function client(ws, options) {
   var ubre = Ubre(Object.assign({}, {send: function (message) { return ws.send(message); }},
     options));
-  ws.onmessage = function (ref) {
+
+  ws.addEventListener('message', function (ref) {
     var target = ref.target;
     var data = ref.data;
 
     return ubre.message(data, target);
-  };
-  ws.onopen = function () { return ubre.open(); };
-  ws.onclose = function () { return ubre.close(); };
+  });
+  ws.addEventListener('open', function () { return ubre.open(); });
+  ws.addEventListener('close', function () { return ubre.close(); });
 
   ubre.ws = ws;
 
@@ -358,5 +362,6 @@ function server(server, options) {
   return ubre
 }
 
+Ubre.ws = ws;
+
 export default Ubre;
-export { websocket as ws };
