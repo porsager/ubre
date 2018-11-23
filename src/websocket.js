@@ -11,9 +11,9 @@ function client(ws, options) {
     ...options
   })
 
-  ws.addEventListener('message', ({ target, data }) => ubre.message(data, target))
-  ws.addEventListener('open', () => ubre.open())
-  ws.addEventListener('close', () => ubre.close())
+  (ws.addEventListener || ws.on)('message', ({ target, data }) => ubre.message(data, target))
+  (ws.addEventListener || ws.on)('open', () => ubre.open())
+  (ws.addEventListener || ws.on)('close', () => ubre.close())
 
   ubre.ws = ws
 
