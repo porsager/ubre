@@ -10,9 +10,10 @@ function client(ws, options) {
     send: message => ws.send(message),
     ...options
   })
-  ws.onmessage = ({ target, data }) => ubre.message(data, target)
-  ws.onopen = () => ubre.open()
-  ws.onclose = () => ubre.close()
+
+  ws.addEventListener('message', ({ target, data }) => ubre.message(data, target))
+  ws.addEventListener('open', () => ubre.open())
+  ws.addEventListener('close', () => ubre.close())
 
   ubre.ws = ws
 
