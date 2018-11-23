@@ -107,13 +107,13 @@ function Ubre({
       body = undefined
     }
 
-    open && forward(['subscribe', 'topic'], body, this.target)
+    open && forward(['subscribe', topic], body, this.target)
     const subscription = { body, fn, sent: open, target: this.target }
     subscriptions.add(topic, subscription)
 
     return {
       unsubscribe: () => {
-        open && forward(['unsubscribe', 'topic'], null, this.target)
+        open && forward(['unsubscribe', topic], null, this.target)
         subscriptions.remove(topic, subscription)
       }
     }
