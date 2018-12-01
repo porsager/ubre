@@ -180,9 +180,8 @@ function Ubre(ref) {
   };
 
   ubre.publish = function (topic, body) {
-    subscribers.has(topic) && subscribers.get(topic).forEach(function (s) {
-      forward(['publish', topic], body, s);
-    });
+    subscribers.has(topic) && subscribers.get(topic).forEach(function (s) { return forward(['publish', topic], body, s); }
+    );
   };
 
   ubre.subscribe = function(topic, body, fn) {
@@ -307,16 +306,16 @@ function ws (ws, options) { return typeof ws.address === 'function'
 
 function client(ws, options) {
   var ubre = Ubre(Object.assign({}, {send: function (message) { return ws.send(message); }},
-    options));
+    options))
 
-  ws.addEventListener('message', function (ref) {
+  ;(ws.addEventListener || ws.on).call(ws, 'message', function (ref) {
     var target = ref.target;
     var data = ref.data;
 
     return ubre.message(data, target);
-  });
-  ws.addEventListener('open', function () { return ubre.open(); });
-  ws.addEventListener('close', function () { return ubre.close(); });
+  })
+  ;(ws.addEventListener || ws.on).call(ws, 'open', function () { return ubre.open(); })
+  ;(ws.addEventListener || ws.on).call(ws, 'close', function () { return ubre.close(); });
 
   ubre.ws = ws;
 
