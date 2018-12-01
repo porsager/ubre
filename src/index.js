@@ -1,6 +1,7 @@
 import Ubre from './ubre'
-import ws from './websocket'
+import { client, server } from './websocket'
 
-Ubre.ws = ws
+Ubre.ws = client
+Ubre.wss = server
 
 export default Ubre

@@ -1,11 +1,6 @@
 import Ubre from './ubre'
 
-export default (ws, options) =>
-  typeof ws.address === 'function'
-    ? server(ws, options)
-    : client(ws, options)
-
-function client(ws, options) {
+export function client(ws, options) {
   const ubre = Ubre({
     send: message => ws.send(message),
     ...options
@@ -20,7 +15,7 @@ function client(ws, options) {
   return ubre
 }
 
-function server(server, options) {
+export function server(server, options) {
   const ubre = Ubre({
     send: (message, ws) => ws.send(message),
     open: true,

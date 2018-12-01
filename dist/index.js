@@ -300,10 +300,6 @@ function MapSet() {
   }
 }
 
-function ws (ws, options) { return typeof ws.address === 'function'
-    ? server(ws, options)
-    : client(ws, options); }
-
 function client(ws, options) {
   var ubre = Ubre(Object.assign({}, {send: function (message) { return ws.send(message); }},
     options))
@@ -335,6 +331,7 @@ function server(server, options) {
   return ubre
 }
 
-Ubre.ws = ws;
+Ubre.ws = client;
+Ubre.wss = server;
 
 module.exports = Ubre;
