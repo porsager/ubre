@@ -5,6 +5,7 @@
 [![NPM version](https://img.shields.io/npm/v/ubre.svg)](https://www.npmjs.com/package/ubre)
 [![Size](https://img.shields.io/bundlephobia/minzip/ubre.svg)]()
 [![Gitter Chat](https://img.shields.io/gitter/room/porsager/ubre.svg)]()
+[![license](https://img.shields.io/github/license/porsager/ubre.svg)]()
 
 **A Javascript library implementing the lightweight [UBRE](UBRE.md) text protocol for p2p, client and server use.**
 

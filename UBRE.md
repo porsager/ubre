@@ -2,9 +2,9 @@
 
 ***WARNING** *This is still alpha stage - expect breaking changes*
 
-**UBRE is a small text protocol for message passing supporting pub/sub & request/response (rpc).**
+**UBRE is a small json spec for message passing supporting pub/sub & request/response (rpc).**
 
-It can be used on any kind of connection that supports sending / receiving messages, but was created with websockets in mind. It should be easy to use for communicating through iframes, service workers and similar avenues.
+It can be used on any kind of connection that supports sending / receiving text messages, but was created with websockets in mind. It should be easy to use for communicating through iframes, service workers and similar avenues.
 
 It is not concerned with deliverability or connection management, but is intended simply as a format to handle passing of messages.
 
@@ -12,44 +12,59 @@ You can find an implementation of UBRE in javascript which can be used on the se
 
 ## Message Formats
 
-All message formats start the first line with the type of message and metadata to complete that message.
+All messages must include a type and name, and can include an id & body depending on type.
 
 ```
-type meta data
-payload
+{
+    "type": "..."
+}
 ```
 
 eg.
 ```
 publish news
-{"title":"Some News","content":"Short news"}
+{
+    "type": "publish",
+    "name": "news",
+    "body": {
+        "title":"Some News",
+        "content":"Short news"
+    }
+}
 ```
-
-The following line / lines contain an optional payload for the message.
 
 ### pub / sub 
 
 > publish, subscribe, events
 
-Used to subscribe / publish to various topics. The topic format and handling is entirely up to the client.
+Used to subscribe / publish. The handling of subscriptions according to the name is entirely up to the client.
 
 #### `subscribe`
 
 ```
-subscribe topic
+{
+    "type": "subscribe",
+    "name": "some topic"
+}
 ```
 
 #### `publish`
 
 ```
-publish topic
-payload
+{
+    "type": "publish",
+    "name": "some topic",
+    "body": "some topic data"
+}
 ```
 
 #### `unsubscribe`
 
 ```
-unsubscribe topic
+{
+    "type": "unsubscribe",
+    "name": "some topic"
+}
 ```
 
 ### req / res
@@ -59,26 +74,39 @@ unsubscribe topic
 #### `request`
 
 ```
-request id path
-payload
+{
+    "type": "request",
+    "id": "uniqueid",
+    "name": "some request",
+    "body": "some request body"
+}
 ```
 
 #### `cancel`
 
 ```
-cancel id
+{
+    "type": "cancel",
+    "id": "uniqueid"
+}
 ```
 
 #### `success`
 
 ```
-success id
-payload
+{
+    "type": "success",
+    "id": "uniqueid",
+    "body": "some success data"
+}
 ```
 
 #### `success`
 
 ```
-fail id
-payload
+{
+    "type": "fail",
+    "id": "uniqueid",
+    "body": "some fail data"
+}
 ```

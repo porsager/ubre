@@ -17,59 +17,59 @@ function Ubre({
       , handlers = new Map()
 
   const incoming = {
-    subscribe: function(from, [topic]) {
-      !subscribers.has(topic) && ubre.onTopicStart(topic)
-      subscribers.add(topic, from)
-      ubre.onSubscribe(topic, from)
+    subscribe: function(from, { name }) {
+      !subscribers.has(name) && ubre.onTopicStart(name)
+      subscribers.add(name, from)
+      ubre.onSubscribe(name, from)
     },
 
-    unsubscribe: function(from, [topic]) {
-      subscribers.remove(topic, from)
-      !subscribers.has(topic) && ubre.onTopicEnd(topic)
-      ubre.onUnsubscribe(topic, from)
+    unsubscribe: function(from, { name }) {
+      subscribers.remove(name, from)
+      !subscribers.has(name) && ubre.onTopicEnd(name)
+      ubre.onUnsubscribe(name, from)
     },
 
-    publish: (from, [topic], body) =>
-      subscriptions.has(topic) && subscriptions.get(topic).forEach(s => (
+    publish: (from, { name, body }) =>
+      subscriptions.has(name) && subscriptions.get(name).forEach(s => (
         (!s.target || s.target === from) && s.fn(body)
       )),
 
-    request: (from, [id, url], data) => {
-      if (!handlers.has(url))
-        return forward(['fail', id], new Error('NotFound'), from)
+    request: (from, { id, name, body }) => {
+      if (!handlers.has(name))
+        return forward({ type: 'fail', id, body: new Error('NotFound') }, from)
 
       tasks.set(id, from)
-      Promise.resolve(handlers.get(url)(data, from))
-      .then(result => {
+      Promise.resolve(handlers.get(name)(body, from))
+      .then(body => {
         tasks.has(id) && (
-          forward(['success', id], result, from),
+          forward({ type: 'success', id, body: body === null ? undefined : body }, from),
           tasks.delete(id)
         )
       })
-      .catch(error => {
+      .catch(body => {
         tasks.has(id) && (
-          forward(['fail', id], error, from),
+          forward({ type: 'fail', id, body: body === null ? undefined : body }, from),
           tasks.delete(id)
         )
       })
     },
 
-    success: (from, [id], body) => {
+    success: (from, { id, body }) => {
       requests.has(id) && requests.get(id).resolve(body)
       requests.delete(id)
     },
 
-    fail: (from, [id], body) => {
+    fail: (from, { id, body }) => {
       requests.has(id) && requests.get(id).reject(body)
       requests.delete(id)
     },
 
-    cancel: (from, [id]) =>
+    cancel: (from, { id }) =>
       tasks.delete(id)
   }
 
-  function forward(head, body, target) {
-    send(head.join(' ') + (body ? '\n' + serialize(body) : ''), target)
+  function forward(message, target) {
+    send(serialize(message), target)
   }
 
   function ubre(target) {
@@ -88,18 +88,13 @@ function Ubre({
   ubre.onUnsubscribe = noop
 
   ubre.message = (message, from) => {
-    const idx = message.indexOf('\n')
-        , header = idx > -1 ? message.slice(0, idx) : message
-        , [type, ...args] = header.split(' ')
-        , body = idx > -1 && message.slice(idx + 1)
-
-    if (type in incoming)
-      incoming[type](from, args, body && deserialize(body))
+    message = deserialize(message)
+    message.type in incoming && incoming[message.type](from, message)
   }
 
   ubre.publish = (topic, body) => {
     subscribers.has(topic) && subscribers.get(topic).forEach(s =>
-      forward(['publish', topic], body, s)
+      forward({ type: 'publish', name: topic, body }, s)
     )
   }
 
@@ -109,52 +104,52 @@ function Ubre({
       body = undefined
     }
 
-    open && forward(['subscribe', topic], body, this.target)
+    open && forward({ type: 'subscribe', name: topic, body }, this.target)
     const subscription = { body, fn, sent: open, target: this.target }
     subscriptions.add(topic, subscription)
 
     return {
       unsubscribe: () => {
-        open && forward(['unsubscribe', topic], null, this.target)
+        open && forward({ type: 'unsubscribe', name: topic, body }, this.target)
         subscriptions.remove(topic, subscription)
       }
     }
   }
 
-  ubre.request = function(url, body, id) {
+  ubre.request = function(name, body, id) {
     id = id || uuid()
     let cancel
     const promise = new Promise((resolve, reject) => {
       cancel = () => (
-        open && forward(['cancel', id], null, this.target),
+        open && forward({ type: 'cancel',  id, body }, this.target),
         requests.delete(id),
         reject(new Error('cancelled'))
       )
-      requests.set(id, { resolve, reject, url, body, sent: open, target: this.target })
+      requests.set(id, { resolve, reject, name, body, sent: open, target: this.target })
     })
 
     promise.cancel = cancel
 
-    open && forward(['request', id, url], body, this.target)
+    open && forward({ type: 'request', id, name, body }, this.target)
     return promise
   }
 
-  ubre.handle = (url, fn) => {
-    typeof url === 'object'
-      ? Object.keys(url).forEach(h => ubre.handle(h, url[h]))
-      : handlers.set(url, fn)
+  ubre.handle = (name, fn) => {
+    typeof name === 'object'
+      ? Object.keys(name).forEach(h => ubre.handle(h, name[h]))
+      : handlers.set(name, fn)
   }
 
   ubre.open = (target) => {
     open = true
 
     subscriptions.forEach((s, topic) => s.forEach(m => !m.sent && (
-      forward(['subscribe', topic], m.body, m.target),
+      forward({ type: 'subscribe', name: topic, body: m.body }, m.target),
       m.sent = true
     )))
 
     requests.forEach((r, id) => !r.sent && (
-      forward(['request', id, r.url], r.body, r.target),
+      forward({ type: 'request', id, name: r.name, body: r.body }, r.target),
       r.sent = true
     ))
   }
