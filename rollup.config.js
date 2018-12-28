@@ -9,12 +9,10 @@ export default [{
       browser: true
     }),
     commonjs(),
-    buble({
-      objectAssign: 'Object.assign'
-    })
+    buble()
   ],
   output: {
-    file: 'dist/index.browser.js',
+    file: 'dist/ubre.browser.js',
     format: 'esm'
   }
 }, {
@@ -22,12 +20,10 @@ export default [{
   plugins: [
     nodeResolve(),
     commonjs(),
-    buble({
-      objectAssign: 'Object.assign'
-    })
+    buble()
   ],
   output: {
-    file: 'dist/index.js',
+    file: 'dist/ubre.js',
     format: 'cjs'
   }
 }]
