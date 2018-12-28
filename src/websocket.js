@@ -1,10 +1,11 @@
 import Ubre from './ubre'
 
 export function client(ws, options) {
-  const ubre = Ubre({
-    send: message => ws.send(message),
-    ...options
-  })
+  options = options || {}
+  if (typeof options.send !== 'function')
+    options.send = message => ws.send(message)
+
+  const ubre = Ubre(options)
 
   ;(ws.addEventListener || ws.on).call(ws, 'message', ({ target, data }) => ubre.message(data, target))
   ;(ws.addEventListener || ws.on).call(ws, 'open', () => ubre.open())
@@ -16,11 +17,14 @@ export function client(ws, options) {
 }
 
 export function server(server, options) {
-  const ubre = Ubre({
-    send: (message, ws) => ws.send(message),
-    open: true,
-    ...options
-  })
+  options = options || {}
+  if (typeof options.send !== 'function')
+    options.send = (message, ws) => ws.send(message)
+
+  if (!('open' in options))
+    options.open = true
+
+  const ubre = Ubre(options)
 
   server.on('connection', ws => {
     ws.on('message', data => ubre.message(data, ws))
