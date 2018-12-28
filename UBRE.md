@@ -4,7 +4,7 @@
 
 **UBRE is a small json spec for message passing supporting pub/sub & request/response (rpc).**
 
-It can be used on any kind of connection that supports sending / receiving text messages, but was created with websockets in mind. It should be easy to use for communicating through iframes, service workers and similar avenues.
+It can be used on any kind of connection that supports sending / receiving json messages, but was created with websockets in mind. It should be easy to use for communicating through iframes, service workers and similar avenues.
 
 It is not concerned with deliverability or connection management, but is intended simply as a format to handle passing of messages.
 

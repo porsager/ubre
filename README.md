@@ -7,7 +7,7 @@
 [![Gitter Chat](https://img.shields.io/gitter/room/porsager/ubre.svg)]()
 [![license](https://img.shields.io/github/license/porsager/ubre.svg)]()
 
-**A Javascript library implementing the lightweight [UBRE](UBRE.md) text protocol for p2p, client and server use.**
+**A Javascript library implementing the lightweight [UBRE](UBRE.md) json form for p2p, client and server use.**
 
 Ubre is by itself transport agnostic, and the base of this library simply gives you some hooks to tie ubre messages with the transport of your choosing.
 
@@ -102,7 +102,7 @@ Open is used for clients or servers that you know will always have an open conne
 ## Methods
 
 #### `.message(data, target)`
-This function is used to push messages following the ubre protocol from senders for ubre to handle. 
+This function is used to push messages following the ubre format from senders for ubre to handle. 
 
 ## More examples
 
