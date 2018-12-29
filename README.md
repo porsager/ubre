@@ -4,7 +4,6 @@
 
 [![NPM version](https://img.shields.io/npm/v/ubre.svg)](https://www.npmjs.com/package/ubre)
 [![Size](https://img.shields.io/bundlephobia/minzip/ubre.svg)]()
-[![Gitter Chat](https://img.shields.io/gitter/room/porsager/ubre.svg)]()
 [![license](https://img.shields.io/github/license/porsager/ubre.svg)]()
 
 **A Javascript library implementing the lightweight [UBRE](UBRE.md) json form for p2p, client and server use.**
@@ -26,11 +25,11 @@ const ws = require('ws')
 const server = ws.Server({ port: 5000 })
 const ubre = Ubre.ws(server)
 
-ubre.handle('echo', x => x)
+ubre.handle('ping', x => x)
 
-setInterval(() =>
-  ubre.publish('ping', new Date())
-)
+server.on('connection', socket => {
+  ubre(socket).publish('news', { title: 'This is really good news' })
+})
 ```
 
 #### WebSocket client
@@ -41,12 +40,14 @@ import Ubre from 'ubre'
 const socket = new Pws('ws://localhost:5000')
 const ubre = Ubre.ws(socket)
 
-ubre.request('echo', 'hello').then(x =>
-  x // hello
+setInterval(() =>
+  ubre.request('ping', new Date()).then(x =>
+    x // '2018-11-19T21:50:05.679Z'
+  )
 )
 
-ubre.subscribe('ping', date =>
-  date // eg. '2018-11-19T21:50:05.679Z'
+ubre.subscribe('news', news =>
+  news // eg. { title: 'This is really good news' }
 )
 ```
 
