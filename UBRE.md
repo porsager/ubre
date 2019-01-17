@@ -101,7 +101,7 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 }
 ```
 
-#### `success`
+#### `fail`
 
 ```
 {
