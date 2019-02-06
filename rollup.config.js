@@ -17,6 +17,7 @@ export default [{
   }
 }, {
   input: 'src/index.js',
+  external: ['crypto'],
   plugins: [
     nodeResolve(),
     commonjs(),

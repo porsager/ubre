@@ -7,7 +7,11 @@ export function client(ws, options) {
 
   const ubre = Ubre(options)
 
-  ;(ws.addEventListener || ws.on).call(ws, 'message', ({ target, data }) => ubre.message(data, target))
+  ;(ws.addEventListener || ws.on).call(ws, 'message', (e) => {
+    e.target === ws
+      ? ubre.message(e.data, e.target)
+      : ubre.message(e, ws)
+  })
   ;(ws.addEventListener || ws.on).call(ws, 'open', () => ubre.open())
   ;(ws.addEventListener || ws.on).call(ws, 'close', () => ubre.close())
 
