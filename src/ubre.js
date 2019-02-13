@@ -31,7 +31,7 @@ function Ubre({
 
     publish: (from, { name, body }) =>
       subscriptions.has(name) && subscriptions.get(name).forEach(s => (
-        (!s.target || s.target === from) && s.fn(body)
+        (!s.target || s.target === from) && s.fn(body, from)
       )),
 
     request: (from, { id, name, body }) => {
