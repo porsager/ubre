@@ -62,10 +62,7 @@ function Ubre({
     fail: (from, { id, body }) => {
       requests.has(id) && requests.get(id).reject(body)
       requests.delete(id)
-    },
-
-    cancel: (from, { id }) =>
-      tasks.delete(id)
+    }
   }
 
   function forward(message, target) {
@@ -118,20 +115,14 @@ function Ubre({
 
   ubre.request = function(name, body, id) {
     id = id || uuid()
-    let cancel
-    const promise = new Promise((resolve, reject) => {
-      cancel = () => (
-        open && forward({ type: 'cancel',  id, body }, this.target),
-        requests.delete(id),
-        reject(new Error('cancelled'))
-      )
-      requests.set(id, { resolve, reject, name, body, sent: open, target: this.target })
+    return new Promise((resolve, reject) => {
+      try {
+        open && forward({ type: 'request', id, name, body }, this.target)
+        requests.set(id, { resolve, reject, name, body, sent: open, target: this.target })
+      } catch (err) {
+        reject(err)
+      }
     })
-
-    promise.cancel = cancel
-
-    open && forward({ type: 'request', id, name, body }, this.target)
-    return promise
   }
 
   ubre.handle = (name, fn) => {

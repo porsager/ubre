@@ -82,15 +82,6 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 }
 ```
 
-#### `cancel`
-
-```
-{
-    "type": "cancel",
-    "id": "uniqueid"
-}
-```
-
 #### `success`
 
 ```
