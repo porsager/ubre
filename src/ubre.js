@@ -155,7 +155,7 @@ function Ubre({
       sendResponse(type, id, body)
     )
 
-    publishes.forEach((p, target) => {
+    publishes.forEach((target, p) => {
       forward(p, target)
       publishes.delete(p)
     })
