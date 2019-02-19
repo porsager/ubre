@@ -14,6 +14,7 @@ function Ubre({
       , subscribers = MapSet()
       , tasks = new Map()
       , requests = new Map()
+      , publishes = new Map()
       , handlers = new Map()
 
   const incoming = {
@@ -38,20 +39,10 @@ function Ubre({
       if (!handlers.has(name))
         return forward({ type: 'fail', id, body: new Error('NotFound') }, from)
 
-      tasks.set(id, from)
+      tasks.set(id, { from })
       Promise.resolve(handlers.get(name)(body, from))
-      .then(body => {
-        tasks.has(id) && (
-          forward({ type: 'success', id, body: body === null ? undefined : body }, from),
-          tasks.delete(id)
-        )
-      })
-      .catch(body => {
-        tasks.has(id) && (
-          forward({ type: 'fail', id, body: body === null ? undefined : body }, from),
-          tasks.delete(id)
-        )
-      })
+      .then(body => sendResponse('success', id, body))
+      .catch(body => sendResponse('fail', id, body))
     },
 
     success: (from, { id, body }) => {
@@ -62,6 +53,20 @@ function Ubre({
     fail: (from, { id, body }) => {
       requests.has(id) && requests.get(id).reject(body)
       requests.delete(id)
+    }
+  }
+
+  function sendResponse(type, id, body) {
+    const task = tasks.get(id)
+    if (!task)
+      return
+
+    if (open) {
+      forward({ type, id, body }, task.from),
+      tasks.delete(id)
+    } else {
+      task.body = body
+      task.type = type
     }
   }
 
@@ -91,7 +96,9 @@ function Ubre({
 
   ubre.publish = (topic, body) => {
     subscribers.has(topic) && subscribers.get(topic).forEach(s =>
-      forward({ type: 'publish', name: topic, body }, s)
+      open
+        ? forward({ type: 'publish', name: topic, body }, s)
+        : publishes.set({ type: 'publish', name: topic, body }, s)
     )
   }
 
@@ -143,6 +150,15 @@ function Ubre({
       forward({ type: 'request', id, name: r.name, body: r.body }, r.target),
       r.sent = true
     ))
+
+    tasks.forEach(({ type, body }, id) =>
+      sendResponse(type, id, body)
+    )
+
+    publishes.forEach((p, target) => {
+      forward(p, target)
+      publishes.delete(p)
+    })
   }
 
   ubre.close = function() {
@@ -159,9 +175,6 @@ function Ubre({
     } else {
       open = false
       subscriptions.forEach(s => s.forEach(m => m.sent = false))
-      requests.forEach(({ reject }) => reject(new Error('closed')))
-      requests.clear()
-      tasks.clear()
     }
   }
 
