@@ -29,7 +29,7 @@ export function server(server, options) {
     options.open = true
 
   const ubre = Ubre(options)
-
+  ubre.wss = server
   server.on('connection', ws => {
     ws.on('message', data => ubre.message(data, ws))
     ws.on('close', () => ubre(ws).close())
