@@ -2,36 +2,15 @@
 
 ***WARNING** *This is still alpha stage - expect breaking changes*
 
-**UBRE is a small json spec for message passing supporting pub/sub & request/response (rpc).**
+**UBRE is a small json spec for supporting pub/sub & request/response message passing.**
 
 It can be used on any kind of connection that supports sending / receiving json messages, but was created with websockets in mind. It should be easy to use for communicating through iframes, service workers and similar avenues.
 
-It is not concerned with deliverability or connection management, but is intended simply as a format to handle passing of messages.
+It is not concerned with deliverability or connection management, but is intended simply as a comman format for req/res and pub/sub messaging.
 
-You can find an implementation of UBRE in javascript which can be used on the server, and in the browser. 
+You can find an opinionated implementation of UBRE in javascript which can be used on the server, and in the browser. 
 
 ## Message Formats
-
-All messages must include a type and name, and can include an id & body depending on type.
-
-```
-{
-    "type": "..."
-}
-```
-
-eg.
-```
-publish news
-{
-    "type": "publish",
-    "name": "news",
-    "body": {
-        "title":"Some News",
-        "content":"Short news"
-    }
-}
-```
 
 ### pub / sub 
 
@@ -43,8 +22,7 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 
 ```
 {
-    "type": "subscribe",
-    "name": "some topic"
+    "subscribe": "some topic"
 }
 ```
 
@@ -52,9 +30,8 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 
 ```
 {
-    "type": "publish",
-    "name": "some topic",
-    "body": "some topic data"
+    "publish": "some topic",
+    ["body": "some topic data"]
 }
 ```
 
@@ -62,8 +39,7 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 
 ```
 {
-    "type": "unsubscribe",
-    "name": "some topic"
+    "unsubscribe": "some topic"
 }
 ```
 
@@ -75,10 +51,9 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 
 ```
 {
-    "type": "request",
+    "request": "some request",
     "id": "uniqueid",
-    "name": "some request",
-    "body": "some request body"
+    ["body": "some request body"]
 }
 ```
 
@@ -86,9 +61,8 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 
 ```
 {
-    "type": "success",
-    "id": "uniqueid",
-    "body": "some success data"
+    "success": "id",
+    ["body": "some success data"]
 }
 ```
 
@@ -96,8 +70,7 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 
 ```
 {
-    "type": "fail",
-    "id": "uniqueid",
-    "body": "some fail data"
+    "fail": "id",
+    ["body": "some fail data"]
 }
 ```
