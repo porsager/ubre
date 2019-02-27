@@ -7,8 +7,10 @@ const noop = () => { /* noop */ }
 function Ubre({
   send = noop,
   open = false,
+  serialize = JSON.stringify,
+  serializeError = err => JSON.stringify(serializeErr(err)),
   deserialize = JSON.parse,
-  serialize = JSON.stringify
+  deserializeError = JSON.parse
 }) {
   const subscriptions = MapSet()
       , subscribers = MapSet()
@@ -203,3 +205,32 @@ function MapSet() {
     }
   }
 }
+
+function copy(o, seen = []) {
+  return Object.keys(o).reduce((acc, key) => (
+    acc[key] = o[key] && typeof o[key] === 'object'
+      ? (
+        seen.push(o),
+        seen.indexOf(o[key]) > -1
+          ? '[Circular]'
+          : copy(o[key], seen))
+      : o[key],
+    acc
+  ), Array.isArray(o) ? [] : {})
+}
+
+const common = ['name', 'message', 'stack', 'code']
+function serializeErr(error) {
+  if (typeof error === 'function')
+    return '[Function: ' + (error.name || 'anonymous') + ']'
+
+  if (typeof error !== 'object')
+    return error
+
+  const err = copy(error)
+  common.forEach(c =>
+    typeof error[c] === 'string' && (err[c] = error[c])
+  )
+  return err
+}
+
