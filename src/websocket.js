@@ -10,7 +10,7 @@ export function client(ws, options) {
   ;(ws.addEventListener || ws.on).call(ws, 'message', (e) => {
     e.target === ws
       ? e.data[0] === '{' && ubre.message(e.data, e.target)
-      : e.data[0] === '{' && ubre.message(e, ws)
+      : e[0] === '{' && ubre.message(e, ws)
   })
   ;(ws.addEventListener || ws.on).call(ws, 'open', () => ubre.open())
   ;(ws.addEventListener || ws.on).call(ws, 'close', () => ubre.close())
