@@ -7,10 +7,9 @@ const noop = () => { /* noop */ }
 function Ubre({
   send = noop,
   open = false,
-  serialize = JSON.stringify,
-  serializeError = err => JSON.stringify(serializeErr(err)),
   deserialize = JSON.parse,
-  deserializeError = JSON.parse
+  serialize = JSON.stringify,
+  unwrapError = unwrapErr
 }) {
   const subscriptions = MapSet()
       , subscribers = MapSet()
@@ -44,7 +43,7 @@ function Ubre({
       tasks.set(id, { from })
       Promise.resolve(handlers.get(request)(body, from))
       .then(body => sendResponse(id, { success: id, body }))
-      .catch(body => sendResponse(id, { fail: id, body }))
+      .catch(body => sendResponse(id, { fail: id, body: unwrapError(body) }))
     },
 
     success: (from, { success, body }) => {
@@ -220,7 +219,7 @@ function copy(o, seen = []) {
 }
 
 const common = ['name', 'message', 'stack', 'code']
-function serializeErr(error) {
+function unwrapErr(error) {
   if (typeof error === 'function')
     return '[Function: ' + (error.name || 'anonymous') + ']'
 
