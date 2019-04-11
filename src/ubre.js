@@ -38,7 +38,7 @@ function Ubre({
 
     request: (from, { id, request, body }) => {
       if (!handlers.has(request))
-        return forward({ fail: id, body: new Error('NotFound') }, from)
+        return forward({ fail: id, body: 'NotFound' }, from)
 
       tasks.set(id, { from })
       Promise.resolve(handlers.get(request)(body, from))
