@@ -41,7 +41,7 @@ function Ubre({
         return forward({ fail: id, body: 'NotFound' }, from)
 
       tasks.set(id, { from })
-      Promise.resolve(handlers.get(request)(body, from))
+      new Promise(resolve => resolve(handlers.get(request)(body, from)))
       .then(body => sendResponse(id, { success: id, body }))
       .catch(body => sendResponse(id, { fail: id, body: unwrapError(body) }))
     },
