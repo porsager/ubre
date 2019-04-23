@@ -1,6 +1,6 @@
 {
   "name": "ubre",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "A Javascript library implementing the lightweight ubre json format",
   "main": "dist/ubre.js",
   "browser": "dist/ubre.browser.js",
