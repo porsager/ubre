@@ -7,13 +7,9 @@ export function client(ws, options) {
 
   const ubre = Ubre(options)
 
-  ;(ws.addEventListener || ws.on).call(ws, 'message', (e) => {
-    e.target === ws
-      ? e.data[0] === '{' && ubre.message(e.data, e.target)
-      : e[0] === '{' && ubre.message(e, ws)
-  })
-  ;(ws.addEventListener || ws.on).call(ws, 'open', () => ubre.open())
-  ;(ws.addEventListener || ws.on).call(ws, 'close', () => ubre.close())
+  ws.addEventListener('message', (e) => e.data && e.data[0] === '{' && ubre.message(e.data, ws))
+  ws.addEventListener('open', () => ubre.open())
+  ws.addEventListener('close', () => ubre.close())
 
   ubre.ws = ws
 
