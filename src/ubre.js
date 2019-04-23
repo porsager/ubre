@@ -99,11 +99,13 @@ function Ubre({
     message.fail && incoming.fail(from, message)
   }
 
-  ubre.publish = (topic, body) => {
-    subscribers.has(topic) && subscribers.get(topic).forEach(s =>
-      open
+  ubre.publish = function(topic, body) {
+    subscribers.has(topic) && (this.target
+      ? subscribers.get(topic).has(this.target) && forward({ publish: topic, body }, this.target)
+      : subscribers.get(topic).forEach(s => open
         ? forward({ publish: topic, body }, s)
         : publishes.set({ publish: topic, body }, s)
+      )
     )
   }
 
