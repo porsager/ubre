@@ -13,10 +13,10 @@ function Ubre({
 }) {
   const subscriptions = MapSet()
       , subscribers = MapSet()
-      , tasks = new Map()
-      , requests = new Map()
-      , publishes = new Map()
-      , handlers = new Map()
+      , tasks = Map()
+      , requests = Map()
+      , publishes = Map()
+      , handlers = Map()
 
   const incoming = {
     subscribe: function(from, { subscribe }) {
@@ -189,10 +189,10 @@ function Ubre({
 }
 
 function MapSet() {
-  const map = new Map()
+  const map = Map()
 
   return {
-    add: (key, item) => (map.get(key) || map.set(key, new Set()).get(key)).add(item),
+    add: (key, item) => (map.get(key) || map.set(key, Set()).get(key)).add(item),
     has: map.has.bind(map),
     get: map.get.bind(map),
     delete: map.delete.bind(map),
@@ -205,6 +205,42 @@ function MapSet() {
       set.size === 0 && map.delete(key)
     }
   }
+}
+
+function Map() {
+  let keys = []
+    , values = []
+
+  const map = {
+    has: x => keys.indexOf(x) !== -1,
+    get: x => values[keys.indexOf(x)],
+    set: (x, v) => (keys.push(x), values.push(v), map),
+    delete: x => keys.indexOf(x) !== -1 && values.splice(keys.indexOf(x), 1),
+    forEach: fn => keys.forEach((k, i) => fn(values[i], k, map)),
+    clear: () => (keys = [], values = [], undefined)
+  }
+
+  return map
+}
+
+function Set() {
+  let values = []
+
+  const set = {
+    add: x => (values.indexOf(x) !== -1 && values.push(x), set),
+    clear: () => (values = [], undefined),
+    delete: x => values.indexOf(x) !== -1 ? (values.splice(values.indexOf(x), 1), true) : false,
+    forEach: fn => values.forEach((v, i) => fn(v, v, set)),
+    has: x => values.indexOf(x) !== -1
+  }
+
+  Object.defineProperty(set, 'size', {
+    get() {
+      return values.length
+    }
+  })
+
+  return set
 }
 
 function copy(o, seen = []) {
