@@ -227,7 +227,7 @@ function Set() {
   let values = []
 
   const set = {
-    add: x => (values.indexOf(x) !== -1 && values.push(x), set),
+    add: x => (values.indexOf(x) === -1 && values.push(x), set),
     clear: () => (values = [], undefined),
     delete: x => values.indexOf(x) !== -1 ? (values.splice(values.indexOf(x), 1), true) : false,
     forEach: fn => values.forEach((v, i) => fn(v, v, set)),
