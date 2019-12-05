@@ -215,9 +215,15 @@ function Map() {
     has: x => keys.indexOf(x) !== -1,
     get: x => values[keys.indexOf(x)],
     set: (x, v) => (keys.push(x), values.push(v), map),
-    delete: x => keys.indexOf(x) !== -1 && values.splice(keys.indexOf(x), 1),
     forEach: fn => keys.forEach((k, i) => fn(values[i], k, map)),
-    clear: () => (keys = [], values = [], undefined)
+    clear: () => (keys = [], values = [], undefined),
+    delete: x => {
+      const index = keys.indexOf(x)
+      if (index > -1) {
+        keys.splice(index, 1)
+        values.splice(index, 1)
+      }
+    }
   }
 
   return map
