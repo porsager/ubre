@@ -25,6 +25,7 @@ export default [{
   ],
   output: {
     file: 'dist/ubre.js',
-    format: 'cjs'
+    format: 'cjs',
+    exports: 'default'
   }
 }]
