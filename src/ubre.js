@@ -205,8 +205,11 @@ function MapSet() {
     forEach: map.forEach.bind(map),
     removeItems: item => map.forEach(set => set.delete(item)),
     remove: (key, item) => {
+      if (!map.has(key))
+        return
+
       const set = map.get(key)
-      set && set.delete(item)
+      set.delete(item)
       set.size === 0 && map.delete(key)
     }
   }
