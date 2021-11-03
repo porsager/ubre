@@ -11,7 +11,9 @@
   },
   "files": [
     "/cjs",
-    "/src"
+    "/src",
+    "/UBRE.md",
+    "/ubre.svg"
   ],
   "scripts": {
     "test": "echo some day",

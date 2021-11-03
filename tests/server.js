@@ -1,7 +1,7 @@
-const Ubre = require('../lib/index.js')
-    , WebSocket = require('ws')
+import Ubre from '../src/index.js'
+import { WebSocketServer } from 'ws'
 
-const wss = new WebSocket.Server({
+const wss = new WebSocketServer({
   port: 3000
 })
 

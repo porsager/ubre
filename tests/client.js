@@ -1,6 +1,6 @@
-const Ubre = require('../lib')
-const WS = require('ws')
-const Pws = require('pws')
+import Ubre from '../src/ubre.js'
+import WS from 'ws'
+import Pws from 'pws'
 
 // Establish a reconnecting websocket.
 const ws = new Pws('ws://localhost:3000', WS)
