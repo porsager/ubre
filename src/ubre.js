@@ -8,6 +8,7 @@ const noop = () => { /* noop */ }
 
 function Ubre({
   send = noop,
+  receive = noop,
   open = false,
   deserialize = JSON.parse,
   serialize = JSON.stringify,
@@ -186,6 +187,8 @@ function Ubre({
       subscriptions.forEach(s => s.forEach(m => m.sent = false))
     }
   }
+
+  receive(ubre.message)
 
   return ubre
 }

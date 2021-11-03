@@ -92,6 +92,9 @@ ubre.publish('news', { title: 'Short news', content: 'News are new' })
 #### `send: Function (data, target) -> `
 Ubre will call the `send` function to have you handle pushing the message over your chosen transport.
 
+#### `receive: Function (callback) -> `
+The callback function provided in receive should be called with ubre formatted object and an optional target. It has the same function as `ubre.message` but allows you to complete the ubre implementation only by supplying options.
+
 #### `open: Boolean`
 Open is used for clients or servers that you know will always have an open connection.
 
