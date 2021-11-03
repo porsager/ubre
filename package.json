@@ -2,20 +2,8 @@
   "name": "ubre",
   "version": "0.0.21",
   "description": "A Javascript library implementing the lightweight ubre json format",
-  "main": "dist/ubre.js",
-  "browser": "dist/ubre.browser.js",
-  "module": "dist/ubre.browser.js",
-  "unpkg": "dist/ubre.browser.js",
-  "devDependencies": {
-    "rollup": "2.39.1",
-    "rollup-plugin-buble": "0.19.8",
-    "rollup-plugin-commonjs": "10.1.0",
-    "rollup-plugin-node-resolve": "5.2.0"
-  },
-  "scripts": {
-    "build": "rollup -c",
-    "prepublishOnly": "npm run build"
-  },
+  "type": "module",
+  "main": "src/index.js",
   "author": "Rasmus Porsager",
   "repository": "porsager/ubre",
   "license": "WTFPL"

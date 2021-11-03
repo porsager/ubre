@@ -1,4 +1,4 @@
-![ubre](logo.svg)
+![ubre](ubre.svg)
 
 ***WARNING** *This is still alpha stage - expect breaking changes*
 
