@@ -1,5 +1,5 @@
-import Ubre from './ubre'
-import { client, server } from './websocket'
+import Ubre from './ubre.js'
+import { client, server } from './websocket.js'
 
 Ubre.ws = client
 Ubre.wss = server

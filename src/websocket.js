@@ -1,4 +1,4 @@
-import Ubre from './ubre'
+import Ubre from './ubre.js'
 
 export function client(ws, options) {
   options = options || {}
