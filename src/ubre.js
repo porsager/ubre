@@ -244,7 +244,7 @@ function Set() {
     add: x => (values.indexOf(x) === -1 && values.push(x), set),
     clear: () => (values = [], undefined),
     delete: x => values.indexOf(x) !== -1 ? (values.splice(values.indexOf(x), 1), true) : false,
-    forEach: fn => values.forEach((v, i) => fn(v, v, set)),
+    forEach: fn => values.forEach(v => fn(v, v, set)),
     has: x => values.indexOf(x) !== -1
   }
 
