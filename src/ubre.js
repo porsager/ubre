@@ -1,7 +1,3 @@
-const uuid = x => x
-  ? (x ^ Math.random() * 16 >> x / 4).toString(16)
-  : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid)
-
 export default Ubre
 
 const noop = () => { /* noop */ }
@@ -20,6 +16,8 @@ function Ubre({
       , requests = Map()
       , publishes = Map()
       , handlers = Map()
+
+  let i = 0
 
   const incoming = {
     subscribe: function(from, { subscribe }) {
@@ -131,7 +129,7 @@ function Ubre({
   }
 
   ubre.request = function(request, body, id) {
-    id = id || uuid()
+    id = id || ++i
     return new Promise((resolve, reject) => {
       try {
         open && forward({ request, id, body }, this.target)
