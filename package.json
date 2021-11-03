@@ -3,7 +3,21 @@
   "version": "0.0.21",
   "description": "A Javascript library implementing the lightweight ubre json format",
   "type": "module",
-  "main": "src/index.js",
+  "module": "src/index.js",
+  "main": "cjs/index.js",
+  "exports": {
+    "import": "./src/index.js",
+    "default": "./cjs/index.js"
+  },
+  "files": [
+    "/cjs",
+    "/src"
+  ],
+  "scripts": {
+    "test": "echo some day",
+    "build": "node transpile.cjs",
+    "prepublishOnly": "npm run build"
+  },
   "author": "Rasmus Porsager",
   "repository": "porsager/ubre",
   "license": "WTFPL"
