@@ -148,7 +148,7 @@ function Ubre({
       : handlers.set(request, fn)
   }
 
-  ubre.open = (target) => {
+  ubre.open = () => {
     open = true
 
     subscriptions.forEach((s, topic) => s.forEach(m => !m.sent && (
@@ -174,7 +174,7 @@ function Ubre({
   ubre.close = function() {
     if (this.target) {
       subscribers.removeItems(this.target)
-      subscriptions.forEach((s, topic) => s.forEach(({ target }) =>
+      subscriptions.forEach(s => s.forEach(({ target }) =>
         target === this.target && s.delete(target)
       ))
       requests.forEach((r, id) => r.target === this.target && (
