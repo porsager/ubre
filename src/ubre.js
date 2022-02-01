@@ -12,62 +12,58 @@ function Ubre({
 }) {
   const subscriptions = MapSet()
       , subscribers = MapSet()
-      , tasks = Map()
+      , responses = MapSet()
+      , queue = MapSet()
       , requests = Map()
       , publishes = Map()
       , handlers = Map()
 
   let i = 0
 
-  const incoming = {
-    subscribe: function(from, { subscribe }) {
-      !subscribers.has(subscribe) && ubre.onTopicStart(subscribe)
-      subscribers.add(subscribe, from)
-      ubre.onSubscribe(subscribe, from)
-    },
-
-    unsubscribe: function(from, { unsubscribe }) {
-      subscribers.remove(unsubscribe, from)
-      !subscribers.has(unsubscribe) && ubre.onTopicEnd(unsubscribe)
-      ubre.onUnsubscribe(unsubscribe, from)
-    },
-
-    publish: (from, { publish, body }) =>
-      subscriptions.has(publish) && subscriptions.get(publish).forEach(s => (
-        (!s.target || s.target === from) && s.fn(body, from)
-      )),
-
-    request: (from, { id, request, body }) => {
-      if (!handlers.has(request))
-        return forward({ fail: id, body: 'NotFound' }, from)
-
-      tasks.set(id, { from })
-      new Promise(resolve => resolve(handlers.get(request)(body, from)))
-      .then(body => sendResponse(id, { success: id, body }))
-      .catch(body => sendResponse(id, { fail: id, body: unwrapError(body) }))
-    },
-
-    success: (from, { success, body }) => {
-      requests.has(success) && requests.get(success).resolve(body)
-      requests.delete(success)
-    },
-
-    fail: (from, { fail, body }) => {
-      requests.has(fail) && requests.get(fail).reject(body)
-      requests.delete(fail)
-    }
+  function subscribe(from, { subscribe }) {
+    !subscribers.has(subscribe) && ubre.onTopicStart(subscribe)
+    subscribers.add(subscribe, from)
+    ubre.onSubscribe(subscribe, from)
   }
 
-  function sendResponse(id, message) {
-    const task = tasks.get(id)
-    if (!task)
-      return
+  function unsubscribe(from, { unsubscribe }) {
+    subscribers.remove(unsubscribe, from)
+    !subscribers.has(unsubscribe) && ubre.onTopicEnd(unsubscribe)
+    ubre.onUnsubscribe(unsubscribe, from)
+  }
 
+  function publish(from, { publish, body }) {
+    subscriptions.has(publish) && subscriptions.get(publish).forEach(s => (
+      (!s.target || s.target === from) && s.fn(body, from)
+    ))
+  }
+
+  function request(from, { id, request, body }) {
+    if (!handlers.has(request))
+      return forward({ fail: id, body: 'NotFound' }, from)
+
+    responses.add(from, { id })
+    new Promise(resolve => resolve(handlers.get(request)(body, from)))
+    .then(body => sendResponse(from, id, { success: id, body }))
+    .catch(body => sendResponse(from, id, { fail: id, body: unwrapError(body) }))
+  }
+
+  function success(from, { success, body }) {
+    requests.has(success) && requests.get(success).resolve(body)
+    requests.delete(success)
+  }
+
+  function fail(from, { fail, body }) {
+    requests.has(fail) && requests.get(fail).reject(body)
+    requests.delete(fail)
+  }
+
+  function sendResponse(target, id, message) {
     if (open) {
-      forward(message, task.from),
-      tasks.delete(id)
+      forward(message, target),
+      responses.remove(target, id)
     } else {
-      task.message = message
+      queue.add(target, { id, message })
     }
   }
 
@@ -91,13 +87,13 @@ function Ubre({
   ubre.onUnsubscribe = noop
 
   ubre.message = (message, from) => {
-    message = deserialize(message)
-    message.subscribe && incoming.subscribe(from, message)
-    message.unsubscribe && incoming.unsubscribe(from, message)
-    message.publish && incoming.publish(from, message)
-    message.request && message.id && incoming.request(from, message)
-    message.success && incoming.success(from, message)
-    message.fail && incoming.fail(from, message)
+    const x = deserialize(message)
+    'subscribe'            in x ? subscribe(from, x) :
+    'unsubscribe'          in x ? unsubscribe(from, x) :
+    'publish'              in x ? publish(from, x) :
+    'request' in x && 'id' in x ? request(from, x) :
+    'success'              in x ? success(from, x) :
+    'fail'                 in x && fail(from, x)
   }
 
   ubre.publish = function(topic, body) {
@@ -159,8 +155,8 @@ function Ubre({
       r.sent = true
     ))
 
-    tasks.forEach((message, id) =>
-      sendResponse(id, message)
+    queue.forEach(({ id, message }, from) =>
+      sendResponse(from, id, message)
     )
 
     publishes.forEach((target, p) => {
@@ -179,7 +175,8 @@ function Ubre({
         r.reject(new Error('closed')),
         requests.delete(id)
       ))
-      tasks.forEach((target, id) => { target === this.target && tasks.delete(id) })
+      responses.delete(this.target)
+      queue.delete(this.target)
     } else {
       open = false
       subscriptions.forEach(s => s.forEach(m => m.sent = false))
