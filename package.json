@@ -1,6 +1,6 @@
 {
   "name": "ubre",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "A Javascript library implementing the lightweight ubre json format",
   "type": "module",
   "module": "src/index.js",
