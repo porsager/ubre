@@ -121,11 +121,11 @@ const ws = new Pws('ws://localhost:4663')
 
 const ubre = Ubre({
   // Ubre will call send to have you put it through your connection
-  send: message => ws.send(message)
+  send: (message, target) => target.send(message),
+  
+  // When a message is received pass it on to ubre for handling
+  receive: (fn) => ws.onmessage = ({ target, data }) => fn(data, target)
 })
-
-// When a message is received pass it on to ubre for handling
-ws.onmessage = ({ target, data }) => ubre.message(data, target)
 
 // Tell ubre when a connection is open to send queued messages
 ws.onopen = () => ubre.open()
