@@ -51,8 +51,7 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 
 ```
 {
-    "request": "some request",
-    "id": "uniqueid",
+    "request": "unique id",
     ["body": "some request body"]
 }
 ```
