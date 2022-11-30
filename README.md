@@ -6,9 +6,9 @@
 [![Size](https://img.shields.io/bundlephobia/minzip/ubre.svg)]()
 [![license](https://img.shields.io/github/license/porsager/ubre.svg)]()
 
-**A Javascript library implementing the lightweight [UBRE](UBRE.md) json form for p2p, client and server use.**
+**A Javascript library implementing the lightweight [Ubre](UBRE.md) spec for p2p, iframe, client and server use.**
 
-Ubre is by itself transport agnostic, and the base of this library simply gives you some hooks to tie ubre messages with the transport of your choosing.
+Ubre is by itself transport agnostic, and the base of this library, simply gives you some hooks to pass Ubre messages over the transport of your choosing.
 
 There are pre hooked versions to set up Ubre easily over WebSockets on the client and server.
 
@@ -53,7 +53,7 @@ ubre.subscribe('news', news =>
 
 ## Request / Response (RPC)
 
-The request / response method is fairly straight forward. You can send a request to a specific namespace with an arbitrary payload, and a promise is returned which respolves once the recipient returns either success or failure.
+The request / response method is fairly straight forward. You can send a request to a specific path with an arbitrary payload - a promise is returned which respolves once the recipient returns either success or failure.
 
 #### Make a request
 ```js
@@ -64,7 +64,7 @@ ubre.request('launch', {
 .catch(error => 'Oh noes - wrong code')
 ```
 
-To handle a request you register a function for a namespace which returns your response directly or as a promise
+To handle a request you register a function for a path which returns your response directly or as a promise
 #### Handle requests
 ```js
 ubre.handle('launch', ({ code }) =>
@@ -74,7 +74,7 @@ ubre.handle('launch', ({ code }) =>
 
 ## Pub / Sub
 
-The publish / subscribe setup is equally simple. No wildcard matching just direct namespaces / topics as with RPC. To subscribe, simply specify the topic and a callback function to be called whenever something is published.
+The publish / subscribe setup is equally simple. No wildcard matching just direct paths / topics like with RPC. To subscribe, simply specify the topic and a callback function to be called whenever something is published.
 
 ```js
 ubre.subscribe('news', news => {
@@ -99,9 +99,10 @@ The callback function provided in receive should be called with ubre formatted o
 Open is used for clients or servers that you know will always have an open connection.
 
 #### `serialize: Function a -> b`
-
+A function to serialize the Ubre format before sending. Defaults to JSON.stringify
 
 #### `deserialize: Function a -> b`
+A function to parse a message before passing to Ubre. Defaults to JSON.parse
 
 ## Methods
 
@@ -110,7 +111,7 @@ This function is used to push messages following the ubre format from senders fo
 
 ## More examples
 
-#### Manual hookup - WebSocket Client example 
+#### Manual hookup - WebSocket Client example
 
 ```js
 import Ubre from 'ubre'
