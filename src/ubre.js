@@ -6,7 +6,8 @@ const closedSymbol = Symbol('closed')
 function Ubre({
   send = noop,
   receive = noop,
-  open = false,
+  open = noop,
+  close = noop,
   deserialize = JSON.parse,
   serialize = JSON.stringify,
   unwrapError = unwrapErr
@@ -20,6 +21,7 @@ function Ubre({
       , handlers = Map()
 
   let i = 0
+    , isOpen = open === true
 
   function subscribe(from, { subscribe }) {
     !subscribers.has(subscribe) && ubre.onTopicStart(subscribe)
@@ -63,7 +65,7 @@ function Ubre({
   }
 
   function sendResponse(target, id, message) {
-    if (open) {
+    if (isOpen) {
       forward(message, target),
       responses.remove(target, id)
     } else {
@@ -103,7 +105,7 @@ function Ubre({
   ubre.publish = function(topic, body) {
     subscribers.has(topic) && (this.target
       ? subscribers.get(topic).has(this.target) && forward({ publish: topic, body }, this.target)
-      : subscribers.get(topic).forEach(s => open
+      : subscribers.get(topic).forEach(s => isOpen
         ? forward({ publish: topic, body }, s)
         : publishes.set({ publish: topic, body }, s)
       )
@@ -116,13 +118,13 @@ function Ubre({
       body = undefined
     }
 
-    open && forward({ subscribe: topic, body }, this.target)
-    const subscription = { body, fn, sent: open, target: this.target }
+    isOpen && forward({ subscribe: topic, body }, this.target)
+    const subscription = { body, fn, sent: isOpen, target: this.target }
     subscriptions.add(topic, subscription)
 
     return {
       unsubscribe: () => {
-        open && forward({ unsubscribe: topic, body }, this.target)
+        isOpen && forward({ unsubscribe: topic, body }, this.target)
         subscriptions.remove(topic, subscription)
       }
     }
@@ -132,8 +134,8 @@ function Ubre({
     id = id || ++i
     return new Promise((resolve, reject) => {
       try {
-        open && forward({ request, id, body }, this.target)
-        requests.set(id, { resolve, reject, request, body, sent: open, target: this.target })
+        isOpen && forward({ request, id, body }, this.target)
+        requests.set(id, { resolve, reject, request, body, sent: isOpen, target: this.target })
       } catch (err) {
         reject(err)
       }
@@ -147,7 +149,7 @@ function Ubre({
   }
 
   ubre.open = () => {
-    open = true
+    isOpen = true
 
     subscriptions.forEach((s, topic) => s.forEach(m => !m.sent && (
       forward({ subscribe: topic, body: m.body }, m.target),
@@ -183,12 +185,14 @@ function Ubre({
       responses.delete(this.target)
       queue.delete(this.target)
     } else {
-      open = false
+      isOpen = false
       subscriptions.forEach(s => s.forEach(m => m.sent = false))
     }
   }
 
   receive(ubre.message)
+  typeof open === 'function' && open(ubre.open)
+  typeof open === 'function' && receive(ubre.close)
 
   return ubre
 }
