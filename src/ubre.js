@@ -1,6 +1,7 @@
 export default Ubre
 
 const noop = () => { /* noop */ }
+const closedSymbol = Symbol('closed')
 
 function Ubre({
   send = noop,
@@ -43,9 +44,12 @@ function Ubre({
       return forward({ fail: id, body: 'NotFound' }, from)
 
     responses.add(from, { id })
-    new Promise(resolve => resolve(handlers.get(request)(body, from)))
-    .then(body => sendResponse(from, id, { success: id, body }))
-    .catch(body => sendResponse(from, id, { fail: id, body: unwrapError(body) }))
+    new Promise(x => x(handlers.get(request)(body, from))).then(
+      x => ({ success: id, body: x }),
+      x => ({ fail: id, body: unwrapError(x) })
+    ).then(x =>
+      from[closedSymbol] || sendResponse(from, id, x)
+    )
   }
 
   function success(from, { success, body }) {
@@ -167,6 +171,7 @@ function Ubre({
 
   ubre.close = function() {
     if (this.target) {
+      this.target[closedSymbol] = true
       subscribers.removeItems(this.target)
       subscriptions.forEach(s => s.forEach(({ target }) =>
         target === this.target && s.delete(target)
