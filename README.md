@@ -1,7 +1,5 @@
 ![ubre](ubre.svg)
 
-***WARNING** *This is still alpha stage - expect breaking changes*
-
 [![NPM version](https://img.shields.io/npm/v/ubre.svg)](https://www.npmjs.com/package/ubre)
 [![Size](https://img.shields.io/bundlephobia/minzip/ubre.svg)]()
 [![license](https://img.shields.io/github/license/porsager/ubre.svg)]()
