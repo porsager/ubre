@@ -1,4 +1,4 @@
-![Ubre](logo.svg)
+![ubre](ubre.svg)
 
 **Ubre is a small json spec for supporting pub/sub & request/response message passing.**
 
