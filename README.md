@@ -4,7 +4,7 @@
 [![Size](https://img.shields.io/bundlephobia/minzip/ubre.svg)]()
 [![license](https://img.shields.io/github/license/porsager/ubre.svg)]()
 
-**A Javascript library implementing the lightweight [Ubre](UBRE.md) spec for p2p, iframe, client and server use.**
+**A Javascript library implementing the lightweight [Ubre](UBRE.md) spec for WebSocket, p2p, iframe, client and server use.**
 
 Ubre is by itself transport agnostic, and the base of this library, simply gives you some hooks to pass Ubre messages over the transport of your choosing.
 
