@@ -1,7 +1,5 @@
 ![Ubre](logo.svg)
 
-***WARNING** *This is still alpha stage - expect breaking changes*
-
 **Ubre is a small json spec for supporting pub/sub & request/response message passing.**
 
 It can be used on any kind of connection that supports sending / receiving json messages, but was created with websockets in mind. It should be easy to use for communicating through iframes, service workers and similar avenues.
