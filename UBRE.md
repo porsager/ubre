@@ -98,6 +98,6 @@ That means a complete message looks like this:
 |--------------|--------|-----------------------|
 | Type         | uint8  | S \| P \| R \| s \| f |
 | Name length  | uint16 | length                |
-| Name content | ...    | byte(name length)     |
 | Body length  | uint32 | 0 \| -1 \| length     |
+| Name content | ...    | byte(name length)     |
 | Body content | ...    | byte(body length)     |
