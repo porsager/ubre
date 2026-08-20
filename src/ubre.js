@@ -1,7 +1,8 @@
 export default Ubre
 
 const noop = () => { /* noop */ }
-const closedSymbol = Symbol('closed')
+const $closed = Symbol('closed')
+const $aborters = Symbol('closed')
 
 function Ubre({
   send = noop,
@@ -14,7 +15,6 @@ function Ubre({
 }) {
   const subscriptions = MapSet()
       , subscribers = MapSet()
-      , responses = MapSet()
       , queue = MapSet()
       , requests = Map()
       , publishes = Map()
@@ -45,13 +45,18 @@ function Ubre({
     if (!handlers.has(request))
       return forward({ fail: id, body: 'NotFound' }, from)
 
-    responses.add(from, { id })
-    new Promise(x => x(handlers.get(request)(body, from))).then(
+    const fn = handlers.get(request)
+    const ac = new AbortController()
+    from[$aborters]
+      ? from[$aborters].set(id, ac)
+      : (from[$aborters] = new Map([[id, ac]]))
+    new Promise(x => x(fn(body, from, ac))).then(
       x => ({ success: id, body: x }),
       x => ({ fail: id, body: unwrapError(x) })
-    ).then(x =>
-      from[closedSymbol] || sendResponse(from, id, x)
-    )
+    ).then(x => {
+      from[$aborters]?.delete(id)
+      from[$closed] || ac.signal.aborted || sendResponse(from, id, x)
+    })
   }
 
   function success(from, { success, body }) {
@@ -64,10 +69,14 @@ function Ubre({
     requests.delete(fail)
   }
 
+  function abort(from, { abort, body }) {
+    if (from[$aborters]?.has(abort))
+      from[$aborters].get(abort).abort(body)
+  }
+
   function sendResponse(target, id, message) {
     if (isOpen) {
-      forward(message, target),
-      responses.remove(target, id)
+      forward(message, target)
     } else {
       queue.add(target, { id, message })
     }
@@ -97,6 +106,7 @@ function Ubre({
     'subscribe'            in x ? subscribe(from, x) :
     'unsubscribe'          in x ? unsubscribe(from, x) :
     'publish'              in x ? publish(from, x) :
+    'abort'                in x ? abort(from, x) :
     'request' in x && 'id' in x ? request(from, x) :
     'success'              in x ? success(from, x) :
     'fail'                 in x && fail(from, x)
@@ -130,8 +140,16 @@ function Ubre({
     }
   }
 
-  ubre.request = function(request, body, id) {
-    id = id || ++i
+  ubre.request = function(request, body, context) {
+    const id = ++i
+    context?.signal?.addEventListener('abort', (e) => {
+      if (requests.has(id)) {
+        requests.get(id).reject(e.target.reason)
+        requests.delete(id)
+      }
+      isOpen && forward({ abort: id, body: e.target.reason }, this.target)
+    })
+
     return new Promise((resolve, reject) => {
       try {
         isOpen && forward({ request, id, body }, this.target)
@@ -173,7 +191,7 @@ function Ubre({
 
   ubre.close = function() {
     if (this.target) {
-      this.target[closedSymbol] = true
+      this.target[$closed] = true
       subscribers.removeItems(this.target)
       subscriptions.forEach(s => s.forEach(({ target }) =>
         target === this.target && s.delete(target)
@@ -182,7 +200,6 @@ function Ubre({
         r.reject(new Error('closed')),
         requests.delete(id)
       ))
-      responses.delete(this.target)
       queue.delete(this.target)
     } else {
       isOpen = false
@@ -288,4 +305,3 @@ function unwrapErr(error) {
   )
   return err
 }
-

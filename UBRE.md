@@ -6,7 +6,7 @@ It can be used on any kind of connection that supports sending / receiving json 
 
 It is not concerned with deliverability or connection management, but is intended simply as a comman format for req/res and pub/sub messaging.
 
-You can find an opinionated implementation of UBRE in javascript which can be used on the server, and in the browser. 
+You can find an opinionated implementation of UBRE in javascript which can be used on the server, and in the browser.
 
 ## Message Formats
 
@@ -69,5 +69,14 @@ Used to subscribe / publish. The handling of subscriptions according to the name
 {
     "fail": "id",
     ["body": "some fail data"]
+}
+```
+
+#### `abort`
+
+```
+{
+    "abort": "id",
+    ["body": "optional body"]
 }
 ```
