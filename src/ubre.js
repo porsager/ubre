@@ -1,36 +1,39 @@
 export default Ubre
 
 const noop = () => { /* noop */ }
-const $closed = Symbol('closed')
-const $aborters = Symbol('closed')
 
 function Ubre({
   send = noop,
   receive = noop,
   open = noop,
   close = noop,
+  timeout = 0,
   deserialize = JSON.parse,
   serialize = JSON.stringify,
   unwrapError = unwrapErr
 }) {
-  const subscriptions = MapSet()
-      , subscribers = MapSet()
-      , queue = MapSet()
-      , requests = Map()
-      , publishes = Map()
-      , handlers = Map()
+  const $closed = Symbol('closed')
+      , $aborters = Symbol('aborters')
+      , $queue = Symbol('queue')
+
+  const subscriptions = new Map()
+      , subscribers = new Map()
+      , requests = new Map()
+      , handlers = new Map()
 
   let i = 0
     , isOpen = open === true
+    , queued = []
+    , publishes = []
 
   function subscribe(from, { subscribe }) {
     !subscribers.has(subscribe) && ubre.onTopicStart(subscribe)
-    subscribers.add(subscribe, from)
+    addTo(subscribers, subscribe, from)
     ubre.onSubscribe(subscribe, from)
   }
 
   function unsubscribe(from, { unsubscribe }) {
-    subscribers.remove(unsubscribe, from)
+    removeFrom(subscribers, unsubscribe, from)
     !subscribers.has(unsubscribe) && ubre.onTopicEnd(unsubscribe)
     ubre.onUnsubscribe(unsubscribe, from)
   }
@@ -43,43 +46,110 @@ function Ubre({
 
   function request(from, { id, request, body }) {
     if (!handlers.has(request))
-      return forward({ fail: id, body: 'NotFound' }, from)
+      return respond(from, id, { fail: id, body: 'NotFound' })
 
     const fn = handlers.get(request)
     const ac = new AbortController()
+
+    let timer
+      , timedOut = false
+
     from[$aborters]
       ? from[$aborters].set(id, ac)
       : (from[$aborters] = new Map([[id, ac]]))
-    new Promise(x => x(fn(body, from, ac))).then(
+
+    const running = new Promise(x => x(fn(body, from, ac)))
+    const result = timeout
+      ? Promise.race([running, new Promise((resolve, reject) =>
+        timer = setTimeout(() => {
+          timedOut = true
+          ac.abort(new Error('Timeout'))
+          reject(new Error('Timeout'))
+        }, timeout)
+      )])
+      : running
+
+    result.then(
       x => ({ success: id, body: x }),
       x => ({ fail: id, body: unwrapError(x) })
-    ).then(x => {
-      from[$aborters]?.delete(id)
-      from[$closed] || ac.signal.aborted || sendResponse(from, id, x)
+    ).catch((error) => {
+      console.error('unwrapError failed', error)
+      return { fail: id, body: 'InternalError' }
+    }).then(x => {
+      timer && clearTimeout(timer)
+      from[$aborters] && from[$aborters].delete(id)
+      from[$closed] || (ac.signal.aborted && !timedOut) || respond(from, id, x)
     })
   }
 
   function success(from, { success, body }) {
-    requests.has(success) && requests.get(success).resolve(body)
-    requests.delete(success)
+    const r = pending(from, success)
+    if (!r)
+      return
+
+    r.resolve(body)
+    clearRequest(success)
   }
 
   function fail(from, { fail, body }) {
-    requests.has(fail) && requests.get(fail).reject(body)
-    requests.delete(fail)
+    const r = pending(from, fail)
+    if (!r)
+      return
+
+    r.reject(body)
+    clearRequest(fail)
+  }
+
+  function pending(from, id) {
+    const r = requests.get(id)
+    if (r && r.target && r.target !== from) {
+      console.error('Response for request ' + id + ' came from the wrong peer')
+      return
+    }
+
+    return r
   }
 
   function abort(from, { abort, body }) {
-    if (from[$aborters]?.has(abort))
+    if (from[$aborters] && from[$aborters].has(abort))
       from[$aborters].get(abort).abort(body)
   }
 
-  function sendResponse(target, id, message) {
-    if (isOpen) {
-      forward(message, target)
-    } else {
-      queue.add(target, { id, message })
+  function clearRequest(id) {
+    const r = requests.get(id)
+    if (!r)
+      return
+
+    r.timer && clearTimeout(r.timer)
+    requests.delete(id)
+  }
+
+  function respond(target, id, message) {
+    try {
+      sendResponse(target, id, message)
+    } catch (error) {
+      console.error('Could not send response', error)
+      'fail' in message || respond(target, id, { fail: id, body: 'SerializationError' })
     }
+  }
+
+  function sendResponse(target, id, message) {
+    if (isOpen)
+      return forward(message, target)
+
+    target[$queue]
+      ? target[$queue].push({ id, message })
+      : (queued.push(target), target[$queue] = [{ id, message }])
+  }
+
+  function requeue(target, messages) {
+    target[$queue] = messages.concat(target[$queue] || [])
+  }
+
+  function sendPublish(message, target) {
+    isOpen
+      ? forward(message, target)
+      : publishes.push({ message, target })
   }
 
   function forward(message, target) {
@@ -113,13 +183,15 @@ function Ubre({
   }
 
   ubre.publish = function(topic, body) {
-    subscribers.has(topic) && (this.target
-      ? subscribers.get(topic).has(this.target) && forward({ publish: topic, body }, this.target)
-      : subscribers.get(topic).forEach(s => isOpen
-        ? forward({ publish: topic, body }, s)
-        : publishes.set({ publish: topic, body }, s)
-      )
-    )
+    if (!subscribers.has(topic))
+      return
+
+    const targets = subscribers.get(topic)
+        , message = { publish: topic, body }
+
+    this.target
+      ? targets.has(this.target) && sendPublish(message, this.target)
+      : targets.forEach(target => sendPublish(message, target))
   }
 
   ubre.subscribe = function(topic, body, fn) {
@@ -130,30 +202,38 @@ function Ubre({
 
     isOpen && forward({ subscribe: topic, body }, this.target)
     const subscription = { body, fn, sent: isOpen, target: this.target }
-    subscriptions.add(topic, subscription)
+    addTo(subscriptions, topic, subscription)
 
     return {
       unsubscribe: () => {
         isOpen && forward({ unsubscribe: topic, body }, this.target)
-        subscriptions.remove(topic, subscription)
+        removeFrom(subscriptions, topic, subscription)
       }
     }
   }
 
   ubre.request = function(request, body, context) {
     const id = ++i
-    context?.signal?.addEventListener('abort', (e) => {
-      if (requests.has(id)) {
-        requests.get(id).reject(e.target.reason)
-        requests.delete(id)
-      }
-      isOpen && forward({ abort: id, body: e.target.reason }, this.target)
-    })
+    const ms = context && 'timeout' in context
+      ? context.timeout
+      : timeout
+
+    const cancel = (reason, abortBody) => {
+      requests.has(id) && requests.get(id).reject(reason)
+      clearRequest(id)
+      isOpen && forward({ abort: id, body: abortBody }, this.target)
+    }
+
+    context && context.signal && context.signal.addEventListener('abort', (e) =>
+      cancel(e.target.reason, e.target.reason)
+    )
 
     return new Promise((resolve, reject) => {
       try {
         isOpen && forward({ request, id, body }, this.target)
-        requests.set(id, { resolve, reject, request, body, sent: isOpen, target: this.target })
+        const r = { resolve, reject, request, body, sent: isOpen, target: this.target }
+        requests.set(id, r)
+        ms && (r.timer = setTimeout(() => cancel(new Error('Timeout'), 'Timeout'), ms))
       } catch (err) {
         reject(err)
       }
@@ -179,116 +259,100 @@ function Ubre({
       r.sent = true
     ))
 
-    queue.forEach(({ id, message }, from) =>
-      sendResponse(from, id, message)
-    )
+    const targets = queued
+    queued = []
+    try {
+      targets.forEach(target => {
+        const messages = target[$queue]
+        delete target[$queue]
+        if (!messages)
+          return
 
-    publishes.forEach((target, p) => {
-      forward(p, target)
-      publishes.delete(p)
-    })
+        let x = 0
+        try {
+          for (; x < messages.length; x++)
+            respond(target, messages[x].id, messages[x].message)
+        } finally {
+          x < messages.length && requeue(target, messages.slice(x))
+        }
+      })
+    } finally {
+      targets.forEach(target =>
+        target[$queue] && queued.indexOf(target) === -1 && queued.push(target)
+      )
+    }
+
+    const pending = publishes
+    publishes = []
+    pending.forEach(({ message, target }) => forward(message, target))
   }
 
-  ubre.close = function() {
-    if (this.target) {
-      this.target[$closed] = true
-      subscribers.removeItems(this.target)
-      subscriptions.forEach(s => s.forEach(({ target }) =>
-        target === this.target && s.delete(target)
-      ))
-      requests.forEach((r, id) => r.target === this.target && (
+  ubre.close = function(target) {
+    target = target || this.target
+
+    if (target) {
+      target[$closed] = true
+      delete target[$queue]
+      if (target[$aborters]) {
+        target[$aborters].forEach(ac => ac.abort(new Error('closed')))
+        delete target[$aborters]
+      }
+      publishes = publishes.filter(p => p.target !== target)
+      subscribers.forEach((targets, topic) =>
+        targets.delete(target) && targets.size === 0 && subscribers.delete(topic)
+      )
+      subscriptions.forEach((s, topic) => {
+        s.forEach(subscription =>
+          subscription.target === target && s.delete(subscription)
+        )
+        s.size === 0 && subscriptions.delete(topic)
+      })
+      requests.forEach((r, id) => r.target === target && (
         r.reject(new Error('closed')),
-        requests.delete(id)
+        clearRequest(id)
       ))
-      queue.delete(this.target)
     } else {
       isOpen = false
       subscriptions.forEach(s => s.forEach(m => m.sent = false))
+      requests.forEach(r => r.sent = false)
     }
   }
 
-  receive(ubre.message)
+  typeof receive === 'function' && receive(ubre.message)
   typeof open === 'function' && open(ubre.open)
-  typeof open === 'function' && receive(ubre.close)
+  typeof close === 'function' && close(target => ubre.close(target))
 
   return ubre
 }
 
-function MapSet() {
-  const map = Map()
-
-  return {
-    add: (key, item) => (map.get(key) || map.set(key, Set()).get(key)).add(item),
-    has: map.has.bind(map),
-    get: map.get.bind(map),
-    delete: map.delete.bind(map),
-    clear: map.clear.bind(map),
-    forEach: map.forEach.bind(map),
-    removeItems: item => map.forEach(set => set.delete(item)),
-    remove: (key, item) => {
-      if (!map.has(key))
-        return
-
-      const set = map.get(key)
-      set.delete(item)
-      set.size === 0 && map.delete(key)
-    }
-  }
+function addTo(map, key, item) {
+  const set = map.get(key)
+  set
+    ? set.add(item)
+    : map.set(key, new Set([item]))
 }
 
-function Map() {
-  let keys = []
-    , values = []
+function removeFrom(map, key, item) {
+  const set = map.get(key)
+  if (!set)
+    return
 
-  const map = {
-    has: x => keys.indexOf(x) !== -1,
-    get: x => values[keys.indexOf(x)],
-    set: (x, v) => (keys.push(x), values.push(v), map),
-    forEach: fn => keys.forEach((k, i) => fn(values[i], k, map)),
-    clear: () => (keys = [], values = [], undefined),
-    delete: x => {
-      const index = keys.indexOf(x)
-      if (index > -1) {
-        keys.splice(index, 1)
-        values.splice(index, 1)
-      }
-    }
-  }
-
-  return map
+  set.delete(item)
+  set.size === 0 && map.delete(key)
 }
 
-function Set() {
-  let values = []
-
-  const set = {
-    add: x => (values.indexOf(x) === -1 && values.push(x), set),
-    clear: () => (values = [], undefined),
-    delete: x => values.indexOf(x) !== -1 ? (values.splice(values.indexOf(x), 1), true) : false,
-    forEach: fn => values.forEach(v => fn(v, v, set)),
-    has: x => values.indexOf(x) !== -1
-  }
-
-  Object.defineProperty(set, 'size', {
-    get() {
-      return values.length
-    }
-  })
-
-  return set
-}
-
-function copy(o, seen = []) {
-  return Object.keys(o).reduce((acc, key) => (
+function copy(o, seen = new Set()) {
+  seen.add(o)
+  const result = Object.keys(o).reduce((acc, key) => (
     acc[key] = o[key] && typeof o[key] === 'object'
-      ? (
-        seen.push(o),
-        seen.indexOf(o[key]) > -1
-          ? '[Circular]'
-          : copy(o[key], seen))
+      ? seen.has(o[key])
+        ? '[Circular]'
+        : copy(o[key], seen)
       : o[key],
     acc
   ), Array.isArray(o) ? [] : {})
+  seen.delete(o)
+  return result
 }
 
 const common = ['name', 'message', 'stack', 'code']
